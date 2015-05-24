@@ -1,0 +1,346 @@
+ROM:5FF00000 loc_5FF00000                            ; CODE XREF: ROM:5FF00078�j
+ROM:5FF00000                 B       loc_5FF00040        ; Used for Reset - This is where we start
+ROM:5FF00004 ; ---------------------------------------------------------------------------
+ROM:5FF00004                 LDR     PC, =sub_5FF16FB4   ; Used for Undef
+ROM:5FF00008 ; ---------------------------------------------------------------------------
+ROM:5FF00008                 LDR     PC, =sub_5FF16FEC   ; Used for SWI
+ROM:5FF0000C ; ---------------------------------------------------------------------------
+ROM:5FF0000C                 LDR     PC, =sub_5FF17024   ; Used for Prefabt
+ROM:5FF00010 ; ---------------------------------------------------------------------------
+ROM:5FF00010                 LDR     PC, =sub_5FF17060   ; Used for DataAbt
+ROM:5FF00014 ; ---------------------------------------------------------------------------
+ROM:5FF00014                 LDR     PC, =loc_5FF17098   ; Used for AddrExc 
+ROM:5FF00018 ; ---------------------------------------------------------------------------
+ROM:5FF00018                 LDR     PC, =loc_5FF16F24   ; Used for IRQ
+ROM:5FF0001C ; ---------------------------------------------------------------------------
+ROM:5FF0001C                 LDR     PC, =sub_5FF16F6C   ; Probably FIQ, need to verify this
+ROM:5FF00020 ; ---------------------------------------------------------------------------
+ROM:5FF00020                 SVCPL   0xF00040
+ROM:5FF00020 ; ---------------------------------------------------------------------------
+ROM:5FF00024 off_5FF00024    DCD sub_5FF16FB4        ; DATA XREF: ROM:5FF00004�r
+ROM:5FF00028 off_5FF00028    DCD sub_5FF16FEC        ; DATA XREF: ROM:5FF00008�r
+ROM:5FF0002C off_5FF0002C    DCD sub_5FF17024        ; DATA XREF: ROM:5FF0000C�r
+ROM:5FF00030 off_5FF00030    DCD sub_5FF17060        ; DATA XREF: ROM:5FF00010�r
+ROM:5FF00034 off_5FF00034    DCD loc_5FF17098        ; DATA XREF: ROM:5FF00014�r
+ROM:5FF00038 off_5FF00038    DCD loc_5FF16F24        ; DATA XREF: ROM:5FF00018�r
+ROM:5FF0003C off_5FF0003C    DCD sub_5FF16F6C        ; DATA XREF: ROM:5FF0001C�r
+ROM:5FF00040 ; ---------------------------------------------------------------------------
+ROM:5FF00040
+ROM:5FF00040 loc_5FF00040                            ; CODE XREF: ROM:loc_5FF00000�j
+ROM:5FF00040                 ADR     R0, loc_5FF00000   <-- The address we rebased to
+ROM:5FF00044                 LDR     R1, =loc_5FF00000
+ROM:5FF00048                 CMP     R0, R1
+ROM:5FF0004C                 CMP     R0, R1
+ROM:5FF00050                 BEQ     loc_5FF0007C
+...
+...
+ROM:5FF000E8 loc_5FF000E8                            ; CODE XREF: ROM:5FF000F0�j
+ROM:5FF000E8                 CMP     R0, R1
+ROM:5FF000EC                 STRLT   R2, [R0],#4
+ROM:5FF000F0                 BLT     loc_5FF000E8
+ROM:5FF000F4                 LDR     R0, =(_ibootStart+1)
+ROM:5FF000F8                 MOV     LR, PC
+ROM:5FF000FC                 BX      R0 ; _ibootStart
+ROM:5FF00100
+ROM:5FF00100 loc_5FF00100                            ; CODE XREF: ROM:loc_5FF00100�j
+ROM:5FF00100                 B       loc_5FF00100
+Where iBootStart (not the official Apple Symbol, of course) can be seen at:
+
+ROM:5FF00BA4 _ibootStart                             ; CODE XREF: ROM:5FF000FC�p
+ROM:5FF00BA4                                         ; DATA XREF: ROM:5FF000F4�o ...
+ROM:5FF00BA4                 PUSH    {R7,LR}
+ROM:5FF00BA6                 MOV     R7, SP
+ROM:5FF00BA8                 LDR     R0, =aIbootStart ; "\niBoot start\n"
+ROM:5FF00BAA                 BL      loc_5FF233C4
+ROM:5FF00BAE                 MOVS    R0, #0
+ROM:5FF00BB0                 BL      loc_5FF16E54
+ROM:5FF00BB4                 BL      loc_5FF1570C
+ROM:5FF00BB8                 BL      loc_5FF143A8
+ROM:5FF00BBC                 BL      unk_5FF15264
+ROM:5FF00BC0                 LDR     R0, =aMain      ; "main"
+..
+Flow of iBoot (1219 - 5.0.x)
+iBoot is quite a complicated binary, which spawns several ARM tasks to enable the boot process:
+
+- iBootStart (disassembly started above) - starts main (5FF00BCA) - which calls the main function at 5FF00C14
+- main: Does the good stuff (loading the kernel, etc)
+   starts the poweroff task (5FF00EF2) - calls  (sub_5FF00FD0+1)
+   In recovery mode (failed boot): 
+           starts command (5FF00F0A) - calls 5FF15928
+           starts idleoff (5FF99F2E) - calls 5FF01060
+Revisions
+iBoot-99              1.0b    (Build 1A420) [Unreleased]
+iBoot-159             1.0     (Build 1A543a)
+                      1.0.1   (Build 1C25)
+                      1.0.2   (Build 1C28)
+iBoot-204             1.1     (Build 3A100)
+                      1.1     (Build 3A101)
+                      1.1.1   (Build 3A109a)
+iBoot-204.0.2         1.1.1   (Build 3A110a)
+iBoot-204.2.9         1.1.2   (Build 3B48b)
+iBoot-204.3.14        1.1.3   (Build 4A93)
+                      1.1.4   (Build 4A102)
+iBoot-204.3.16        1.1.5   (Build 4B1)
+?                     1.2b    (Build 5A147p)
+?                     2.0b2   (Build 5A225c)
+?                     2.0b3   (Build 5A240d)
+?                     2.0b4   (Build 5A258f)
+?                     2.0b5   (Build 5A274d)
+?                     2.0b6P  (Build 5A292g)
+?                     2.0b6F  (Build 5A308)
+?                     2.0b7   (Build 5A331)
+?                     2.0b8GM (Build 5A345)
+iBoot-320.20          2.0     (Build 5A347)
+                      2.0.1   (Build 5B108)
+                      2.0.2   (Build 5C1)
+?                     2.1b    (Build 5F90)
+iBoot-385.22          2.1     (Build 5F137)
+                      2.1.1   (Build 5F138)
+?                     2.2b    (Build 5G29)
+iBoot-385.49          2.2     (Build 5G77)
+                      2.2     (Build 5G77a)
+                      2.2.1   (Build 5H11)
+                      2.2.1   (Build 5H11a)
+?                     3.0b    (Build 7A238j)
+iBoot-594.2~1         3.0b2   (Build 7A259g)
+iBoot-596.6~3         3.0b3   (Build 7A280f)
+iBoot-596.16~2        3.0b4   (Build 7A300g)
+iBoot-596.20~1        3.0b5   (Build 7A312g)
+iBoot-596.24~1        3.0     (Build 7A341)
+                      3.0.1   (Build 7A400)
+iBoot-636.26~2        3.1b    (Build 7C97d)
+iBoot-636.??~?        3.1b2   (Build 7C106c)
+iBoot-636.47~1        3.1b3   (Build 7C116a)
+iBoot-636.65~2        3.1     (Build 7C144)
+iBoot-636.66~1        3.1.1   (Build 7C145)
+                      3.1.1   (Build 7C146)
+iBoot-636.66~5        3.1.2   (Build 7D11)
+iBoot-636.66.33~4     3.1.3   (Build 7E18)
+iBoot-817.28~18       3.2     (Build 7B367)
+iBoot-817.29~2        3.2.1   (Build 7B405)
+                      3.2.2   (Build 7B500)
+iBoot-822.2.1         4.0b    (Build 8A2180g) [Unreleased]
+iBoot-872~12          4.0b    (Build 8A230m)
+iBoot-889.3~2         4.0b2   (Build 8A248c)
+iBoot-889.12~2        4.0b3   (Build 8A260b)
+iBoot-889.19~1        4.0b4   (Build 8A274b)
+iBoot-889.24~4        4.0GM   (Build 8A293)
+                      4.0     (Build 8A293)
+                      4.0.1   (Build 8A306)
+                      4.0.2   (Build 8A400)
+iBoot-931.18.1~1      4.1b    (Build 8B5080c)
+iBoot-931.18.15~2     4.1b2   (Build 8B5091b)
+iBoot-931.18.27~1     4.1     (Build 8B117)
+                      4.1     (Build 8B118)
+iBoot-931.67~2        4.2b    (Build 8C5091e)
+iBoot-931.71.80~1     4.2b2   (Build 8C5101c)
+iBoot-931.71.13~3     4.2b3   (Build 8C5115c)
+iBoot-931.71.16~9     4.2GM   (Build 8C134)
+                      4.2GM   (Build 8C134b)
+                      4.2.1GM (Build 8C148)
+                      4.2.1   (Build 8C148)
+                      4.2.1   (Build 8C148a)
+iBoot-931.72.14~6     4.2.5   (Build 8E128)
+                      4.2.6   (Build 8E200)
+                      4.2.7   (Build 8E303)
+                      4.2.8   (Build 8E401)
+iBoot-931.72.14~10    4.2.9   (Build 8E501)
+                      4.2.10  (Build 8E600)
+iBoot-1072.33~1       4.3b    (Build 8F5148b)
+iBoot-1072.38~2       4.3b2   (Build 8F5153d)
+iBoot-1072.49~2       4.3b3   (Build 8F5166b)
+iBoot-1072.58~4       4.3GM   (Build 8F190)
+                      4.3     (Build 8F190)
+iBoot-1072.59~2       4.3     (Build 8F191)
+                      4.3.1   (Build 8G4)
+iBoot-1072.61~2       4.3.2   (Build 8H7)
+                      4.3.2   (Build 8H8)
+                      4.3.3   (Build 8J2)
+                      4.3.3   (Build 8J3)
+iBoot-1072.61~6       4.3.4   (Build 8K2)
+                      4.3.5   (Build 8L1)
+iBoot-1219.35.80~1    5.0b    (Build 9A5220p)
+iBoot-1219.40.25~4    5.0b2   (Build 9A5248d)
+iBoot-1219.41.11~1    5.0b3   (Build 9A5259f)
+iBoot-1219.42.8~1     5.0b4   (Build 9A5274d)
+iBoot-1219.43.9~3     5.0b5   (Build 9A5288d)
+iBoot-1219.43.18~3    5.0b6   (Build 9A5302b)
+iBoot-1219.43.27~1    5.0b7   (Build 9A5313e)
+iBoot-1219.43.32~15   5.0GM   (Build 9A332) [Unreleased]
+                      5.0GM   (Build 9A334)
+                      5.0     (Build 9A334)
+iBoot-1219.43.32~27   5.0.1b1 (Build 9A402)
+iBoot-1219.43.32~29   5.0.1b2 (Build 9A404)
+                      5.0.1   (Build 9A405)
+                      5.0.1   (Build 9A406)
+iBoot-1219.61.19~6    5.1b    (Build 9B5117b)
+iBoot-1219.62.1~2     5.1b2   (Build 9B5127c)
+iBoot-1219.62.8~5     5.1b3   (Build 9B5141a)
+iBoot-1219.62.15      5.1     (Build 9B176)
+iBoot-1219.62.15~2    5.1     (Build 9B179b)
+                      5.1.1   (Build 9B206)
+iBoot-1537.1.60~15    6.0b    (Build 10A5316k)
+iBoot-1537.2.11~5     6.0b2   (Build 10A5338d)
+iBoot-1537.2.81~1     6.0b3   (Build 10A5355d)
+iBoot-1537.2.41~2     6.0b4   (Build 10A5376e)
+iBoot-1537.4.18~2     6.0GM   (Build 10A403)
+                      6.0     (Build 10A403)
+iBoot-1537.4.19~1     6.0     (Build 10A405)
+                      6.0     (Build 10A406)
+iBoot-1537.4.20~1     6.0     (Build 10A407)
+iBoot-1537.4.21~3     6.0.1   (Build 10A523)
+                      6.0.1   (Build 10A525)
+iBoot-1537.4.21~2     6.0.1   (Build 10A8426)
+                      6.0.2   (Build 10A8500)
+iBoot-1537.4.21~3     6.0.2   (Build 10A550)
+                      6.0.2   (Build 10A551)
+iBoot-1537.9.40~3     6.1b    (Build 10B5095f)
+iBoot-1537.9.46~8     6.1b2   (Build 10B5105c)
+                      6.1b3   (Build 10B5117b)
+                      6.1b4   (Build 10B5126b)
+iBoot-1537.9.55~4     6.1b5   (Build 10B141)
+                      6.1b5   (Build 10B142)
+                      6.1b5   (Build 10B143)
+                      6.1b5   (Build 10B144)
+                      6.1     (Build 10B141)
+                      6.1     (Build 10B142)
+                      6.1     (Build 10B143)
+                      6.1     (Build 10B144)
+                      6.1.1b  (Build 10B311)
+                      6.1.1   (Build 10B145)
+                      6.1.2   (Build 10B146)
+                      6.1.2   (Build 10B147)
+iBoot-1537.9.55~11    6.1.3b2 (Build 10B318)
+                      6.1.3b2 (Build 10B318a)
+                      6.1.3   (Build 10B329)
+                      6.1.4   (Build 10B350)
+                      6.1.5   (Build 10B400)
+                      6.1.6   (Build 10B500)
+iBoot-1940.1.8~44     7.0b    (Build 11A4372q)
+iBoot-1940.1.35~9     7.0b2   (Build 11A4400f)
+iBoot-1940.1.46.1.1~1 7.0b3   (Build 11A4414e)
+iBoot-1940.1.66~9     7.0b4   (Build 11A4435d)
+iBoot-1940.1.75~3     7.0b5   (Build 11A4449a)
+                      7.0b6   (Build 11A4449d)         
+iBoot-1940.1.75~20    7.0GM   (Build 11A465)
+                      7.0     (Build 11A465) 
+iBoot-1940.1.75~93    7.0.1   (Build 11A470a) 
+                      7.0.2   (Build 11A501)
+iBoot-1940.3.5~1      7.0.3   (Build 11B511)
+                      7.0.4   (Build 11B554a)
+                      7.0.5   (Build 11B601)
+                      7.0.6   (Build 11B651)
+iBoot-1940.10.51~3    7.1b    (Build 11D5099e)
+iBoot-1940.10.57~8    7.1b2   (Build 11D5115d)
+iBoot-1940.10.58~11   7.1b3   (Build 11D5127c)
+iBoot-1940.10.58~32   7.1b4   (Build 11D5134c)
+iBoot-1940.10.58~70   7.1b5   (Build 11D5145e)
+iBoot-1940.10.58~115  7.1     (Build 11D167)
+                      7.1     (Build 11D169)
+iBoot-1940.10.58~122  7.1.1   (Build 11D201)
+iBoot-1940.10.58~132  7.1.2   (Build 11D257)
+iBoot-2261.1.6.0.1~45 8.0b    (Build 12A4265u)
+iBoot-2261.1.31~21    8.0b2   (Build 12A4297e)
+iBoot-2261.1.46~31    8.0b3   (Build 12A4318c)
+iBoot-2261.1.57~43    8.0b4   (Build 12A4331d)
+iBoot-2261.1.64~28    8.0b5   (Build 12A4345d)
+iBoot-2261.1.67~8     8.0GM   (Build 12A365)
+                      8.0     (Build 12A365)
+                      8.0     (Build 12A366)
+iBoot-2261.1.68~1     8.0.1   (Build 12A402) 
+                      8.0.2   (Build 12A405)
+iBoot-2261.3.31~3     8.1b    (Build 12B401) 
+iBoot-2261.3.31~9     8.1b2   (Build 12B407)
+iBoot-2261.3.32~2     8.1     (Build 12B410)
+                      8.1     (Build 12B411)
+iBoot-2261.3.33~13    8.1.1b  (Build 12B432)
+iBoot-2261.3.33~14    8.1.1   (Build 12B435)
+                      8.1.1   (Build 12B436)
+                      8.1.2   (Build 12B440)
+iBoot-2261.3.33~39    8.1.3   (Build 12B446)
+iBoot-2261.5.34~3     8.2b    (Build 12D436)
+iBoot-2261.5.41~10    8.2b2   (Build 12D445d)
+iBoot-2261.5.47~1     8.2b3   (Build 12D5452a)
+iBoot-2261.5.54~3     8.2b4   (Build 12D5461b)
+iBoot-2261.5.58~25    8.2b5   (Build 12D5480a)
+iBoot-2261.5.64~15    8.2     (Build 12D508)
+iBoot-2261.??.??~??   8.3b    (Build 12F5027d)
+iBoot-2261.??.??~??   8.3b2   (Build 12F5037c)
+iBoot-2261.20.19~16   8.3b3   (Build 12F5047f)
+iBoot-2261.20.20~9    8.3b4   (Build 12F61)
+iBoot-2261.20.20~14   8.3     (Build 12F69)
+iBoot-2261.30.33      8.4b    (Build 12H4074d)
+iBoot-2261.30.34~8    8.4b2   (Build 12H4086d)
+iBoot-2261.30.35~21   8.4b3   (Build 12H4098c)
+Apple TV
+iBoot-931.44.21~1    4.0     4.1     (Build 8M89)
+iBoot-931.71.16~9    4.1     4.2     (Build 8C150)
+                     4.1.1   4.2.1   (Build 8C154)
+iBoot-1072.33~1      4.2b    4.3b    (Build 8F5148b)
+iBoot-1072.38~2      4.2b2   4.3b2   (Build 8F5153d)
+iBoot-1072.49~2      4.2b3   4.3b3   (Build 8F5166b)
+iBoot-1072.59~2      4.2     4.3     (Build 8F191m)
+                     4.2.1   4.3     (Build 8F202)
+                     4.2.2   4.3     (Build 8F305)
+                     4.3     4.3     (Build 8F455)
+iBoot-1219.35.80~1   4.4b    5.0b    (Build 9A5220p)
+iBoot-1219.40.25~4   4.4b2   5.0b2   (Build 9A5248d)
+iBoot-1219.41.11~1   4.4b3   5.0b3   (Build 9A5259f)
+iBoot-1219.43.9~3    4.4b5   5.0b5   (Build 9A5288d)
+iBoot-1219.43.18~3   4.4b6   5.0b6   (Build 9A5302b)
+iBoot-1219.43.27~1   4.4b7   5.0b7   (Build 9A5313e)
+iBoot-1219.43.32~21  4.4     5.0     (Build 9A334v)
+iBoot-1219.43.32~22  4.4.1   5.0     (Build 9A335a)
+                     4.4.2   5.0     (Build 9A336a)
+iBoot-1219.43.32~29  4.4.3   5.0.1   (Build 9A405l)
+                     4.4.4   5.0.1   (Build 9A406a)
+iBoot-1219.62.1~2    5.0b2   5.1b2   (Build 9B5127c)
+iBoot-1219.62.8~5    5.0b3   5.1b3   (Build 9B5141a)
+iBoot-1219.62.15~2   5.0     5.1     (Build 9B179b)
+iBoot-1537.1.60~15   5.1b    6.0b    (Build 10A5316k)
+iBoot-1537.2.11~5    5.1b2   6.0b2   (Build 10A5338d)
+iBoot-1537.2.81~1    5.1b3   6.0b3   (Build 10A5355d)
+iBoot-1537.2.41~2    5.1b4   6.0b4   (Build 10A5376e)
+iBoot-1537.4.19~1    5.1     6.0     (Build 10A406e)
+iBoot-1537.4.21~3    5.1.1   6.0.1   (Build 10A831)
+iBoot-1537.9.40~3    5.2b    6.1b    (Build 10B5095f)
+iBoot-1537.9.46~8    5.2b2   6.1b2   (Build 10B5105c)
+                     5.2b3   6.1b3   (Build 10B5117d)
+                     5.2b4   6.1b4   (Build 10B5126d)
+iBoot-1537.9.55~4    5.2     6.1     (Build 10B144b)
+iBoot-1537.9.55~11   5.2.1   6.1.3   (Build 10B329a)
+iBoot-1537.9.55~11   5.3     6.1.4   (Build 10B809)
+iBoot-1940.1.8~44    5.4b    7.0b    (Build 11A4372q)
+iBoot-1940.1.35~9    5.4b2   7.0b2   (Build 11A4400f)
+iBoot-1940.1.66~9    6.0b3   7.0b4   (Build 11A4435d)
+iBoot-1940.1.75~3    6.0b4   7.0b5   (Build 11A4449a)
+iBoot-1940.1.75~93   6.0     7.0.1   (Build 11A470e)
+                     6.0     7.0.2   (Build 11A502)
+iBoot-1940.3.5~1     6.0.1   7.0.3   (Build 11B511d)
+                     6.0.2   7.0.4   (Build 11B554a)
+iBoot-1940.10.51~3   6.1b    7.1b    (Build 11D5099e)
+iBoot-1940.10.57~8   6.1b2   7.1b2   (Build 11D5115d)
+iBoot-1940.10.58~11  6.1b3   7.1b3   (Build 11D5127c)
+iBoot-1940.10.58~32  6.1b4   7.1b4   (Build 11D5134c)
+iBoot-1940.10.58~70  6.1b5   7.1b5   (Build 11D5145e)
+iBoot-1940.10.58~115 6.1     7.1     (Build 11D167)
+iBoot-1940.10.58~122 6.1.1   7.1.1   (Build 11D201c)
+iBoot-1940.10.58~132 6.2     7.1.2   (Build 11D257c)
+                     6.2.1   7.1.2   (Build 12A365b)
+iBoot-2261.1.31~21   7.0b    8.0b    (Build 12A4297e)
+iBoot-2261.1.46~31   7.0b2   8.0b3   (Build 12A4318c)
+iBoot-2261.1.57~43   7.0b3   8.0b4   (Build 12A4331d)
+iBoot-2261.1.64~28   7.0b4   8.0b5   (Build 12A4345d)
+iBoot-2261.1.67~8    7.0GM   8.0GM   (Build 12A365b)
+                     7.0     8.0     (Build 12A365b)
+iBoot-2261.3.31~3    7.0.1b  8.1b    (Build 12B401)
+iBoot-2261.3.31~9    7.0.1b2 8.1b2   (Build 12B407)
+iBoot-2261.3.32~2    7.0.1   8.1     (Build 12B410a)
+iBoot-2261.3.33~13   7.0.2b  8.1.1b  (Build 12B432)
+iBoot-2261.3.33~14   7.0.2   8.1.1   (Build 12B435)
+iBoot-2261.3.33~39   7.0.3   8.1.3   (Build 12B446)
+iBoot-2261.?.??~??   7.1b    8.2b5   (Build 12D5480a)
+iBoot-2261.5.64~15   7.1     8.2     (Build 12D508)
+iBoot-2261.?.??~??   7.1b2   8.3b2   (Build 12F5037c)
+iBoot-2261.20.20~9   7.1b3   8.3b4   (Build 12F61)
+iBoot-2261.20.20~14  7.2     8.3     (Build 12F69)
